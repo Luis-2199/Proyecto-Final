@@ -1,0 +1,484 @@
+---
+title: ""
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r include=FALSE}
+
+library(tidyverse)
+library(lubridate)
+library(plotly)
+library(forecast)
+library("knitr")
+library(egg)
+library(scales)
+library(urca)
+```
+
+
+
+
+![](escudo.png){width=100%}
+
+
+\begin{center}
+\LARGE{Universidad Nacional Autónoma de México}\\
+\Large{Facultad de Ciencias}\\
+\end{center}
+
+$$\\$$
+
+\begin{center}
+\Large{Modelos de Supervivencia y de Series de Tiempo}\\
+\end{center}
+
+$$\\$$
+
+\begin{center}
+\large{Proyecto Series de Tiempo}\\
+\end{center}
+
+$$\\$$
+
+\begin{center}
+Integrantes:\\
+Casto Gómez Pedro Pablo\\
+Domínguez Ramos Aby\\
+López Salazar Erika Samantha\\
+Martinez Herrera Tania Melisa\\
+Mondragón Miranda Néstor Yair\\
+Pimentel Bolívar Luis Emanuel\\
+\end{center}
+
+
+\newpage
+
+# Objetivo 
+
+En este proyecto se hará un análisis de la base de datos “House Property Sales”, para ajustar una serie de tiempo, con el objetivo de poder responder a las siguientes preguntas:
+
+-	¿En qué época del año es más conveniente comprar/vender una casa?
+-	¿Cuál será el precio promedio de las casas para el siguiente año?
+
+# Introducción
+
+
+En estos días los bienes inmuebles representan lo que es una parte muy importante de la riqueza de la mayoría de las personas, una vivienda también puede convertirse en una excelente oportunidad de inversión, ya que se trata de un bien que con el tiempo aumentará su valor.
+
+El término plusvalía se refiere a la capacidad que un inmueble tiene de incrementar su valor a través del tiempo, es decir, aumentar su precio comercial o de venta. Este fenómeno se logra a través de algunos factores externos que benefician la calidad de vida de quienes habitan el inmueble, pero también tiene que ver con el aumento generalizado y sostenido de los precios de bienes y servicios en un país, lo que se conoce como inflación.
+
+Un estudio de mercado inmobiliario es un análisis de los valores de mercado actuales de las propiedades que ayuda al vendedor a elegir un precio de cotización y a los compradores a ver si el precio de venta es demasiado alto, bajo o razonable. Esta información proporciona conocimiento sobre cómo invertir y comprar de manera segura, ya que, entre otras cosas, permite:
+
+- Saber si se debe invertir en una zona en lugar de otra. 
+- Conocer aspectos demográficos que ayudan a determinar la evolución de la zona donde se quiere invertir y conocer si a futuro tendrán un desarrollo que permitan elevar el valor de las propiedades. 
+- Aprovechar un precio más bajo y evitar el pago excesivo del valor de mercado de una propiedad.
+
+Hay diferentes factores en el sector inmobiliario que influyen en el valor de una propiedad,los más importantes a considerar son:
+
+- La demografía del lugar: Describe la composición de la población (edad, raza, género, ingresos, patrones de migración y crecimiento de la población).
+- Tasas de interés: Los cambios en las tasas de interés pueden influir en la capacidad de una persona para comprar una propiedad residencial, ya que si disminuyen las tasas de interés, menor será el costo de obtener una hipoteca para comprar una casa, creando una mayor demanda de bienes raíces, lo que eleva los precios. 
+- La economía de un país: Mide la capacidad de un cliente particular para invertir en una propiedad.
+- Políticas gubernamentales: Los créditos fiscales, las deducciones y los subsidios son algunas de las formas en que el gobierno puede aumentar temporalmente la demanda de bienes inmuebles.
+- Comodidades: Cuando la propiedad está en buenas condiciones, con una mejor infraestructura y cuenta con servicios públicos y comunitarios (suministro de agua y electricidad).
+- Ubicación: Es lo que más influyen a la hora de calcular el precio de una casa, ya que de esta misma se desprenden características importantes que influyen en la calidad de vida de las personas (los establecimientos de los que se rodea, la cercanía a zonas comerciales y centros de salud, el acceso a transporte público, las áreas verdes, los espacios recreativos, lugares de entretenimiento, seguridad de la zona, entre otras).
+- Tamaño de la propiedad: El número de metros cuadrados es de las primeras cosas que se estudian y valoran. Cuanto mayor sea el tamaño de una propiedad, mayor será su valor en el mercado.
+- Tipo de vivienda: Hay distintas razones para inclinarse entre diferentes tipos de propiedad, ya sea por, espacio,privacidad, seguridad, mantenimiento o precio, la elección se basa en los gustos, necesidades y presupuesto de cada persona.
+- Época del año: Las condiciones bajo las cuales los inmuebles son puestos en venta cambian respecto a la época del año. Por ejemplo, se espera que en los últimos y primeros meses del año se tenga una mayor solvencia económica, producto de remuneraciones extra del trabajo o de los ahorros a lo largo del año.
+
+### La crisis financiera internacional de 2008
+
+Un evento de gran importancia dentro del sector inmobiliario es la crisis financiera internacional de 2008, que tuvo su origen en el problema de las hipotecas subprime de EE.UU.y se extendió después, afectando no sólo a toda la economía de ese país, sino también a las de otras naciones, de manera principal, miembros de la Unión Europea. (Juárez , Sánchez Daza, & Zurita Gonzáles , 2015)
+
+Todo comenzó en el 2002. El entonces presidente de EE.UU., George W. Bush, dijo que parte de cumplir el sueño americano era tener una casa propia. Así, pidió ayuda al sector privado, con miras a que el mercado de capitales facilite el financiamiento hipotecario a personas de ingresos más bajos. Este crecimiento de créditos alcanzó a personas a quienes realmente no debió alcanzar: la clase desfavorecida, sin ingresos, activos ni empleo. Este tipo de hipotecas fue bautizada como "hipotecas subprime", que en realidad eran solo activos con alta probabilidad de no pago. Esto ocasionó que las familias se dedicaran a especular ampliamente con los precios de los inmuebles, y sobre todo con los costos de las hipotecas. La especulación llevó al desarrollo de una burbuja inmobiliaria, que infló considerablemente los precios. Esos activos tóxicos estaban siendo "empaquetados" con otros, creando una gran variedad de nuevos productos financieros. Fue así que los bancos de inversión empezaron a repartir sus paquetes de activos cuyo contenido no conocía nadie por todo el mundo. La burbuja hipotecaria estalló y, con ella, los precios de los activos se desplomaron. Al ver esto, las familias que estaban endeudadas optaron por devolver la casa al banco y ocasionaron grandes pérdidas a los bancos. A su vez, esta situación generó naturalmente un colapso en los portafolios de los bancos de inversión a nivel mundial, debido a que estaban plagados de las hipotecas tóxicas subprime. A raíz de todo este proceso, el lunes 15 de septiembre del 2008 fue que Lehman Brothers (compañía global de servicios financieros de Estados Unidos) se declaró en quiebra. El pánico fue generado por el colapso de una entidad considerada demasiado grande para caer. (¿Cómo se originó la peor crisis financiera de la historia?, GESTIÓN, 2013)
+
+
+\newpage 
+
+# Análisis Descriptivo 
+
+Se comienza el análisis con una gráfica de pastel, para conocer la proporción de viviendas de acuerdo al tipo de propiedad. 
+
+```{r, fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+data_raw <- read_csv("raw_sales.csv")
+  #boxplot_2
+aaa <- data_raw %>%
+  group_by(propertyType)%>%
+  select(propertyType) %>%
+  count(propertyType) 
+
+pai1 <- ggplot(data=aaa)+
+  geom_bar(stat= "identity", aes(x="",y=n, fill=propertyType))+
+  coord_polar(theta= "y")+
+  scale_fill_manual(values=c("deepskyblue4", "grey")) +
+  geom_text(aes(label=n, x="",y=n), position=position_stack(vjust =1))+
+  guides(fill=guide_legend(title="Tipo de propiedad"))+
+  theme(axis.title = element_blank()) +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+pai1
+
+```
+
+Se puede observar que la mayoría de las observaciones corresponden a ventas de viviendas de tipo "house" y que el precio de estas en promedio es mayor que las del tipo "unit". Para fines de este proyecto se tomarán en cuenta únicamente el tipo de vivienda "house".
+
+Ahora se mostrarán las observaciones de las casas segmentados por el número de habitaciones. 
+
+```{r, fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+hab <- data_raw %>%
+  filter(propertyType == "house") %>%
+  group_by(bedrooms) %>%
+  select(bedrooms) %>%
+  count(bedrooms)
+
+pai2 <- ggplot(data=hab)+
+  geom_bar(stat= "identity", color= "grey", aes(x="",y=n, fill=bedrooms))+
+  coord_polar(theta= "y")+
+  guides(fill=guide_legend(title="Número de habitaciones")) +
+  theme_light() + scale_fill_continuous(type = "viridis") + 
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+pai2
+
+
+```
+
+
+
+
+Es posible notar que hay una menor cantidad de observaciones correspondientes a las casas con menos de 2 habitaciones, por lo que se verán cuántas observaciones de este tipo hay y si representan una variable significativa para el modelo.
+
+
+```{r echo=FALSE,warning=FALSE, message=FALSE}
+
+library(kableExtra)
+tabla <- data.frame("." = c("Total de viviendas","Viviendas con menos de 2 habitaciones"),
+                    "Total" = c(29580,1657))
+kableExtra::kable(tabla,format = "latex", booktabs = T) %>%
+kable_styling(latex_options = c("striped"))
+```
+
+Este tipo de viviendas representan a penas poco más del 5% de nuestros datos, por lo que no serán consideradas para nuestro modelo.
+
+En la siguiente gráfica de caja se observa claramente en qué región se encuentran concentrados los precios de las casas. Para una mejor visualización, a dichos precios se les aplicó logaritmo natural.
+
+```{r, fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+boxplot(log(data_raw$price, base = exp(1)),horizontal = TRUE, main="Precios de las casas", col="maroon")
+```
+
+
+Existen pocos valores extremos a la izquierda de la gráfica, para ver donde se encuentra la mayoría de ellos y saber cuáles se podrían descartar, se muestran los percentiles de las observaciones. 
+
+
+| 99.9%   | 99.91%  | 99.92%  | 99.93%  | 99.94%  | 99.95% | 99.96% | 99.97% | 99.98% | 99.99% | 100% |
+|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------
+| 2748420 | 2884472 | 2933420 | 2978841 | 3160000 | 3421050 | 3646050 | 4158841 | 4516840 | 5517310 | 8000000 
+
+
+
+Puede notarse que solo cerca del 0.07% de las observaciones son mayores que al rededor de 4,000,000 y algunas llegan hasta 8 millones. Por lo que decidimos excluirlas de nuestro modelo.
+
+Ahora, de forma general se describirá la composición de los datos mediante una gráfica de caja con segmentación de acuerdo al número de habitaciones
+
+```{r, fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+boxplot_1<-ggplot(data_raw)+
+  geom_boxplot(aes(x=bedrooms,y=log(price, base = exp(1)), fill=factor(bedrooms), group=bedrooms))+
+  ggtitle("Boxplot del precio de una casa",
+          subtitle = "de acuerdo al número de habitaciones")+
+  theme(axis.title.x = element_blank())+
+  guides(fill=guide_legend(title="No.habitaciones"))+
+  labs(y = "Log(Precio)") +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+
+boxplot_1
+```
+
+
+Se puede ver, como era de esperarse, que las viviendas con mayor número de habitaciones son las que en promedio tienen precios más elevados, a excepción de las que tienen 0 habitaciones, pero como ya se mencionó anteriormente, no serán tomadas en cuenta para el modelo.
+
+Para un mejor tratamiento de los datos, se consideró propicio tomar el precio promedio de casas para cada mes, desde 2007 hasta el 2019. De esta manera, se tiene un mejor resumen de la información, sin perder la interpretabilidad del modelo propuesto para la serie de tiempo. 
+
+Aunado a lo anterior, se decidió quitar aquellos datos cuyo comportamiento era demasiado alejado de los demás (precios arriba de $3,900,000); dado que, estos datos no representan una proporción significativa del total de estos.
+
+En la siguiente gráfica se muestran los precios de casas segmentadas por el número de habitaciones, únicamente con las restricciones que se habían considerado previamente.
+
+
+```{r Base_de_datos_sin_outliers, fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+  data_raw <- read_csv("raw_sales.csv")
+  
+  data_f <- data_raw %>% mutate(datesold = as.Date(datesold, format = "%d/%m/%Y")) %>%
+    filter(propertyType == "house", bedrooms > 1)
+  
+  data_f_nout_2 <- data_f %>%  filter(price <= 3900000)
+  
+  #Base de datos filtrada
+ggplot(data_f_nout_2, aes(x = datesold, y = price/1000, color = as.factor(bedrooms))) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Tiempo", y = "Precios de venta",
+       color="Núm. de habitaciones") +
+  ggtitle("Precios de casas con dos habitaciones o más",
+          subtitle = "Datos de 2007 a 2019") +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+```
+
+Al igual que el análisis previo, generalmente, el precio aumenta de acuerdo con el número de habitaciones, sin embargo, existe una mayor variación dentro de los precios de las casas con cuatro habitaciones. Lo cual tiene sentido debido a que el número de habitaciones está relacionado con el tamaño de la casa, aunque no lo determina completamente, por lo que no resulta anormal que una casa con dos habitaciones valga más que una con cinco. 
+
+
+\newpage 
+
+# Serie de Tiempo
+
+Se inicia construyendo la serie de tiempo del promedio mensual de los precios de las casas. A modo comparativo, se ajusta para las fechas del 2007 al 2019 y del 2008 al 2019 respectivamente.
+
+```{r include=FALSE}
+data_raw <- read_csv("raw_sales.csv")
+  
+  data_f <- data_raw %>% mutate(datesold = as.Date(datesold, format = "%d/%m/%Y")) %>%
+    filter(propertyType == "house", bedrooms > 1)
+  
+  data_f_nout_2 <- data_f %>%  filter(price <= 3900000)
+  
+  data_month_nout_2 <- data_f_nout_2 %>% mutate(month = month(datesold), year = year(datesold)) %>% group_by(year, month) %>%
+    summarise(price = mean(price))
+  
+  data_cool <- data_month_nout_2 %>%
+    dplyr::ungroup() %>%
+    mutate(fecha=ymd(paste(year, month, "1"))) %>%
+    filter(fecha >= "2008-08-01")
+
+```
+
+```{r echo=FALSE,fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, fig.width=5, fig.height=3.5}
+
+serie0 <- ts(data = data_month_nout_2$price, start = 2007, frequency = 12)
+serie_cool <- ts(data_cool$price, start = c(2008,8), frequency = 12)
+plot_serie <- tibble(time = time(serie0), serie = serie0/1000) %>%
+  ggplot(aes(x = time, y = serie)) +
+  geom_line(size = .9, alpha = 0.8, color = "turquoise4") + 
+  labs(x = "Tiempo", y = "Promedio de Precios") +
+  ggtitle("Precio promedio de bienes inmuebles",
+          subtitle = "Serie de 2007 a 2019") +
+  scale_x_continuous(breaks = seq(2007, 2020, 1)) +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+
+
+plot_serie2 <- tibble(time = time(serie_cool), serie = serie_cool/1000) %>%
+  ggplot(aes(x = time, y = serie)) +
+  geom_line(size = .9, alpha = 0.8, color = "turquoise4") + 
+  labs(x = "Tiempo", y = "Promedio de Precios") +
+  ggtitle(" ",
+          subtitle = "Serie de 2008 a 2019") +
+  scale_x_continuous(breaks = seq(2007, 2020, 1)) +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+
+  ggarrange(plot_serie, plot_serie2,nrow = 2)
+
+```
+
+<!-- Como se puede apreciar en las gráficas anteriores, el promedio de los precios inmobiliarios ha aumentado a través del tiempo, no obstante, en los años 2007 se puede notar una gran variación en los precios. Por lo mencionado anteriormente sobre la crisis financiera, es propicio quitar el primer año de nuestra serie (como se muestra en la gráfica inferior), ya que es un caso singular que afecto al mundo, por lo que para tener un mejor ajuste se realizara la serie únicamente con el precio promedio desde el 1 de agosto de 2008.  -->
+
+En ambas gráficas se puede apreciar que el promedio de los precios inmobiliarios ha aumentado a través del tiempo, no obstante, la primera gráfica muentra gran varianza en los datos del periodo 2007-2008. Como este comportamiento anormal en los datos se puede adjudicar a los eventos que tuvieron lugar por la crisis financiera del 2008, que son considerados eventos extraordinarios, se decidió excluirlos del modelo para obtener un mejor ajuste, iniciando así la serie de tiempo en agosto del 2008. Esta serie corresponde a la segunda gráfica. 
+
+Para una mejor visualización de los componentes de la serie, se muestra a continuación su descomposición.
+
+```{r echo=FALSE , fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, fig.width=5, fig.height=3}
+serie_cool_descomposition <- stats::decompose(serie_cool, type = "additive")
+  
+
+tibble(time = time(serie_cool_descomposition$x),
+       Datos = serie_cool_descomposition$x/1000,
+       Tendencia = serie_cool_descomposition$trend/1000,
+       Estacionalidad = serie_cool_descomposition$seasonal/1000,
+       Remanente = serie_cool_descomposition$random/1000) %>% 
+  gather("type", "value", 2:5) %>% 
+  mutate(type = factor(type, levels = c("Datos", "Tendencia", "Estacionalidad", "Remanente"))) %>% 
+  ggplot(aes(x = time, y = value)) + 
+  geom_line(size = .9, alpha = 0.8, color = "dodgerblue3") + 
+  facet_grid(type~., scales = "free_y") +
+  labs(x = "Años", y = "Promedio de Precios (miles de dólares)") + 
+  ggtitle("Descomposición temporal") +
+  scale_x_continuous(breaks = seq(2007, 2020, 1)) +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+```
+
+Aunque al inicio del comportamiento de la serie se ven datos alternos, se nota que al paso del tiempo el
+promedio del precio va aumento gradualmente. Lo anterior se ve reflejado en la tendencia, que va creciendo
+drásticamente en los últimos años. Por otro lado, para finales del 2019 se puede apreciar el descenso del
+promedio mensual de los precios.
+De igual manera, se ve una clara estacionalidad al inicio y a la mitad del año, donde hay una notoria recaída en el promedio de los precios. Finalmente, parece ser que el comportamiento sigue un ruido blanco.
+
+<!-- Teniendo esta serie ajustada, se mostrará las gráficas de ACF y Partial-ACF para poder ver análisis, que modelo se puede ajustar. -->
+
+A continuación se muestran las gráficas de la autocorrelación (ACF) y autocorrelación parcial (Partial-ACF) de la serie.
+
+```{r echo=FALSE , fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, fig.width=6, fig.height=2.5}
+serie_cool <- ts(data_cool$price, start = c(2008,8), frequency = 12)
+
+
+plot_serieN <- tibble(time = time(serie_cool), serie = serie_cool/1000) %>%
+    ggplot(aes(x = time, y = serie)) +
+    geom_line(size = .9, alpha = 0.8, color = "dodgerblue3") + 
+    labs(x = "Tiempo", y = "Promedio de Precios (miles de dólares)") +
+    ggtitle("Precio promedio de bienes inmuebles",
+            subtitle = "Serie de 2007 a 2019") +
+    scale_x_continuous(breaks = seq(2007, 2020, 1)) +
+    theme_light() +
+    theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+  acfN <- autoplot(acf(serie_cool,plot = FALSE), colour = "darkorchid4", size = 1) + 
+    geom_hline(yintercept = 0) +
+    ggtitle("Autocorrelación Simple") +
+    theme_light() +
+    theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+  pacfN <- autoplot(pacf(serie_cool,plot = FALSE), colour = "darkorchid4", size = 1) + 
+    geom_hline(yintercept = 0) +
+    ggtitle("Autocorrelación Parcial") +
+    labs(y = "Partial ACF") +
+    theme_light() +
+    theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+  
+  ggarrange(acfN, pacfN, nrow = 1)
+
+```
+
+<!-- Se puede notar un decaimiento por parte de la autocorrelación simple conforme avanzan los rezagos, donde se pueden notar una relevancia en los datos cada 12 mese, además de que la estacionalidad dentro del modelo se hace presente. Por lo tanto, es de esperarse que un modelo que se ajuste bien a los datos contendría componentes estacionales como no estacionales, obteniendo un modelo SARIMA. -->
+
+En la grafica de autocorrelación siemple, apesar del decaimiento conforme avanzan los rezagos, se puede ver que cada 12 hay un aumento significativo en los retrasos, lo que indica cierta estacionalidad. Gracias a la tendecia presentada en la serie de tiempo, es posible saber que es no estacionaria, en busca de la estacionariedad de la serie, se consideró oportuno aplicar una diferencia estacional y una diferencia no estacional. 
+
+
+
+<!-- Por lo visto en la gráfica anterior se le aplicara a la serie dos diferencias (una estacional y una no estacional), por lo que la serie quedara de la siguiente forma. -->
+
+La serie con las diferencias aplicadas ya no presenta tendencia, así mismo, la media es constante a lo largo del tiempo, manteniéndose en 0, por último, la varianza no presenta grandes alteraciones. Debido a estas condiciones, no fue considerado aplicar alguna transformación a la serie 
+
+
+```{r echo=FALSE , fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, fig.width=6, fig.height=2.5}
+serie_cool_DD <- serie_cool %>% diff(lag=12) %>% diff()  
+
+plot_serieN2 <- tibble(time = time(serie_cool_DD), serie = serie_cool_DD/1000) %>%
+    ggplot(aes(x = time, y = serie)) +
+    geom_line(size = .9, alpha = 0.8, color = "turquoise4") + 
+    labs(x = "Tiempo", y = "Promedio de Precios") +
+    ggtitle("Precio promedio de bienes inmuebles",
+            subtitle = "Serie de 2008 a 2019") +
+    scale_x_continuous(breaks = seq(2007, 2020, 1)) +
+    theme_light() +
+    theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+  acfN2 <- autoplot(acf(serie_cool_DD,plot = FALSE), colour = "darkorchid4", size = 1) + 
+    geom_hline(yintercept = 0) +
+    ggtitle("Autocorrelación Simple") +
+    theme_light() +
+    theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+  pacfN2 <- autoplot(pacf(serie_cool_DD,plot = FALSE), colour = "darkorchid4", size = 1) + 
+    geom_hline(yintercept = 0) +
+    ggtitle("Autocorrelación Parcial") +
+    labs(y = "Partial ACF") +
+    theme_light() +
+    theme(axis.line = element_line(colour = "black", linetype = "solid"))
+  
+  plot_serieN2 
+
+```
+
+
+\newpage 
+
+```{r echo=FALSE , fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, fig.width=6, fig.height=2.5}
+ggarrange(acfN2, pacfN2, nrow = 1)
+```
+
+
+Al aplicar ambas diferencias se ve que ya no hay ningún decaimiento y no se ven valores que sobresalgan periódicamente.  En la gráfica del ACF, sobresalen significativamente los rezagos 1 y 12, lo que en primera instancia dice que el modelo que se ajusta a la serie de tiempo podría contener un componente de medias móviles estacional y otro no estacional. Por otro lado, en la gráfica del PACF hay varios rezagos que también sobresalen de tal manera que podría reafirmar la presencia de medias moviles, o tomarse como un indicio para la inclusión de componentes autoregresivos en el modelo. 
+
+Teniendo en cuenta el análisis anterior, se ajustaron los siguientes modelos:
+
+| Modelos                  | AIC  |
+|--------------------------|---------
+| SARIMA(0,1,1)(0,1,1)[12] | 2764.31 
+| SARIMA(1,1,1)(0,1,1)[12] | 2762.63
+| SARIMA(4,1,0)(2,1,0)[12] | 2778.58
+
+
+<!-- Entre los modelos ajustados, los dos primeros son muy similares; aunque el segundo tiene un mejor AIC, la diferencia con el primero es mínima (1.68), y puede ser despeciable a la hora de elegir el mejor modelo, ya que la ventaje del primero es que tiene un compnente menos que el segundo, lo que resultaría más fácil de tratar. Finalmente tenemos el modelo recomendado (usando la función auto.arima), el cual nos da un AIC mayor a los calculados con el análisis, pero no se aleja tanto de ellos, aunque puede ser considerado como el peor modelo de los presentados debido a la cantidad de variables que lo conforman. Complementando el análisis del mejor modelo, se realizaron las siguientes pruebas de hipótesis. -->
+
+Entre los modelos ajustados, los dos primeros presentan similitudes. El segundo modelo tiene un mejor AIC, pero su diferencia con el primero (1.68) es mínima y se consideró que puede despreciarse para seleccionar el modelo con el que se trabajará. El primer modelo podría considerarse más adecuado que el segundo debido a que presenta menos componentes, lo que facilita su tratamiento e interpretación. El último fue generado mediante métodos numéricos (utilizando la función auto.arima) y es tomado únicamente como referencia, ya que resulta tener el peor AIC y presentar la mayor cantidad de componentes. 
+
+Complementando el análisis para estos modelos, se realizaron las
+siguientes pruebas de hipótesis:
+
+| Modelos                  | Ljung-Box  | Dickey-Fuller | KPSS   |
+|--------------------------|------------|---------------|------
+| SARIMA(0,1,1)(0,1,1)[12] | 0.5428     | 0.1781        | 2.2e-16
+| SARIMA(1,1,1)(0,1,1)[12] | 0.5041     | 0.1485        | 2.2e-16
+| SARIMA(4,1,0)(2,1,0)[12] | 0.466      | 0.1513        | 2.2e-16
+
+Todos los modelos fueron aceptados por las tres pruebas de hipótesis, donde se puede confirmar que todos ellos tienen residuales independientes (Ljung-Box), sus residuales son estacionarios (Dickey-Fuller) y la serie es estacionaria (KPSS). Debido a que los tres modelos pasaron las pruebas de hipótesis y tienen un AIC semejante, se considero como mejor opción el primer modelo, gracias a su simplicidad con respecto a los otros.
+
+\newpage
+
+El comportamiento de los residuales del modelo se puede ver mejor a través de la sieguiente gráfica:
+
+
+```{r echo=FALSE , fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, fig.width=4, fig.height=3}
+serie_cool_DD <- serie_cool %>% diff(lag=12) %>% diff() 
+Modelo_cool <- Arima(serie_cool_DD, order= c(0,0,1), seasonal = list(order=c(0,0,1), period=12))
+
+forecast::checkresiduals(Modelo_cool, test = F)
+```
+
+El modelo propuesto, como se vio anteriormente, parece no tener una varianza en el promedio de los precios al paso del tiempo. Igualmente, se nota que la autocorrelación simple, no tienen ningún valor sobresaliente por lo que no parece haber ninguna diferencia o variable necesaria para mejorar este modelo. Finalmente, se muestra que los residuales siguen un comportamiento parecido al del ruido blanco.
+
+A continuación, en la siguiente gráfica se muestra la serie de tiempo y el modelo ajustado.
+
+```{r echo=FALSE, fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+
+serie_cool_DD <- serie_cool %>% diff(lag=12) %>% diff()  
+
+Modelo_cool <- Arima(serie_cool, order= c(0,1,1), seasonal = list(order=c(0,1,1), period=12))
+
+
+GSM <- autoplot(serie_cool, color = "black") + 
+  autolayer(fitted(Modelo_cool), color = "red") + 
+  labs(y = "Promedio de Precios", x = "Tiempo")
+GSM
+```
+
+Es apreciable a simple vista que el modelo no difiere tanto de la serie de tiempo. Se puede concluir, junto con las pruebas antes realizadas, que es un buen modelo.
+
+Por último, se presentan las predicciones realizadas hasta mitad del año 2021, junto con sus respectivos intervalos de predicción para 90% y 95% de confianza.
+
+```{r echo=FALSE , fig.align='center', fig.cap='', fig.pos='htbp', message=FALSE, warning=FALSE, out.width='4in'}
+#Predicciones
+Modelo_cool %>% forecast(h = 24, level = c(90,95)) %>% 
+  autoplot() +
+  labs(x = "Tiempo") +
+  scale_x_continuous(breaks = seq(2008, 2022, 1)) +
+  ggtitle("Pronóstico desde ARIMA(0,1,1)(0,1,1)[12]") +
+  scale_y_continuous(label = comma) +
+  labs(y = "Precio promedio") +
+  theme_light() +
+  theme(axis.line = element_line(colour = "black", linetype = "solid"))
+```
+
+Finalmente teniendo la predicción nos indican que el promedio de los precios se mantendrá muy parecido para los años 2020 y 2021 (sin tomar en cuenta una contingencia mundial. Como no se espera un aumento ni una disminución en los precios, no se pueden estimar ganancias a corto plazo si el objetivo es invertir en bienes raíces para la posterior venta de los mismos.
+Por otro lado, si se es dueño de bienes inmuebles que entren en la categoría de aquellos estudiados en este informe, no se recomienda tomar medidas como la venta de los mismos ya que su valor tenderá a mantenerse con el tiempo.
+Finalmente, la información disponible hasta el momento no indica una tendencia establecida, por lo que sería recomendable esperar a tener información más actualizada antes de realizar movimientos arriesgados en el ector inmobiliario.
+
+
+
+# Esto lo deje como ellos lo tenien porque no se si estoy graficando algo mal o porque los precios promedios toman valores negativos :(
+
+
