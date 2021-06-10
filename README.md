@@ -1,4 +1,4 @@
-# Proyecto-Final
+# Proyecto Series de Tiempo
 Este es el proyecto final de la materia de Modelos de Supervivencia y Series de Tiempo.
 En él están integrados los siguientes documentos:
 - Excel de la base de datos a analizar
